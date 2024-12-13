@@ -1,0 +1,31 @@
+server:
+  port: 8070
+spring:
+  application:
+    name: testHexagonal
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  autoconfigure:
+    exclude: org.springframework.modulith.events.jpa.JpaEventPublicationAutoConfiguration,org.springframework.modulith.events.jdbc.JdbcEventPublicationAutoConfiguration
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict

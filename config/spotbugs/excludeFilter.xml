@@ -1,0 +1,6 @@
+<FindBugsFilter>
+    <!-- Excluir advertencias específicas -->
+    <Match>
+        <Bug pattern="MALICIOUS_CODE" />
+    </Match>
+</FindBugsFilter>

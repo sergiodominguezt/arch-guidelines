@@ -1,0 +1,5 @@
+sonar:
+  projectKey: local
+  host:
+    url:
+  login:

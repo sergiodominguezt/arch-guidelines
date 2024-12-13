@@ -1,0 +1,154 @@
+plugins {
+    id 'org.springframework.boot' version '3.3.4'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+    id 'java'
+    id 'org.sonarqube' version '4.0.0.2929'
+//    id 'com.github.spotbugs' version '6.0.26'
+    id 'pmd'
+    id 'checkstyle'
+    id 'maven-publish' // Para publicar el JAR de Javadocs
+    id 'jacoco'
+}
+
+
+group = 'test'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '21'
+targetCompatibility = '21'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    springModulithVersion = '1.2.0'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'io.r2dbc:r2dbc-h2'
+    implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
+    implementation "org.springframework.modulith:spring-modulith-starter-core:$springModulithVersion"
+    implementation 'com.h2database:h2'
+    implementation 'org.springframework.modulith:spring-modulith-starter-jdbc'
+    implementation 'org.springframework.modulith:spring-modulith-starter-jpa'
+    implementation 'org.modelmapper:modelmapper:3.1.0'
+    implementation 'com.puppycrawl.tools:checkstyle:10.21.0'
+//    spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.12.0'
+
+
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+    testImplementation "org.springframework.modulith:spring-modulith-starter-test:$springModulithVersion"
+
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.modulith:spring-modulith-bom:$springModulithVersion"
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+checkstyle {
+    toolVersion = '10.12.4'
+}
+
+// Configuración de PMD
+
+pmd {
+    consoleOutput = true
+    toolVersion = "7.0.0"
+    rulesMinimumPriority = 5
+    ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml"]
+}
+
+//spotbugs {
+//    toolVersion = '4.8.6'
+//}
+//
+//spotbugsMain {
+//    reports {
+//        xml.enabled = false
+//        html.enabled = true
+//    }
+//}
+//
+//spotbugsTest {
+//    reports {
+//        xml.enabled = false
+//        html.enabled = true
+//    }
+//}
+//
+
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "your_project_key"
+        property "sonar.host.url", "http://localhost:9000"
+        property "sonar.login", "your_sonar_token"
+        // Especificar el informe de JaCoCo que SonarQube debe usar
+        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+    }
+}
+
+javadoc {
+    options {
+        encoding = 'UTF-8'
+        charSet = 'UTF-8'
+        links("https://docs.oracle.com/en/java/javase/23/docs/api/") // Enlace a las Javadocs oficiales
+        addBooleanOption('Xdoclint:none', true) // Para suprimir advertencias
+    }
+}
+
+tasks.register('javadocJar', Jar) {
+    archiveClassifier.set('javadoc')
+    from javadoc
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact javadocJar
+        }
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.8" // Puedes cambiar la versión a la última disponible
+}
+
+jacocoTestReport {
+    dependsOn test // Generar el reporte después de ejecutar los tests
+    reports {
+        xml.required.set(true)  // SonarQube requiere el informe XML para el análisis
+        html.required.set(true) // Generar también un informe HTML para revisar localmente
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.90 // El 90% de cobertura que mencionas
+            }
+        }
+    }
+}
+
+test {
+    finalizedBy jacocoTestReport // Ejecutar JaCoCo después de los tests
+    finalizedBy jacocoTestCoverageVerification // Verificar que se cumpla el umbral de cobertura
+}
